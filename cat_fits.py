@@ -1,7 +1,3 @@
-file_dir = "/data3/scratch/bcc_v1"
-OUTDIR = "./out"
-title_in = ""
-
 import numpy as np
 import scipy as sp
 import matplotlib
@@ -11,34 +7,118 @@ import pylab as p
 import rdfits as r
 import mytools
 import sys
+import pyfits as pf
+
+mag_cut = 22.5
+
+file_dir = "/data3/data2/home/clampitt/bcc_v1.0/bcc_v1.0_truth_orig/"
+OUTDIR = "./catalogs"
+
+if not os.path.exists('figures'):
+	        os.makedirs('figures')
+
+title_in = ""
 
 if not os.path.exists(OUTDIR):
 	os.makedirs(OUTDIR)
 	title = str(title_in)
 newOUTDIR = OUTDIR+"/"
 
-import pyfits as pf
-table1 = pf.open(file_dir+"/Aardvark_v1.0c_truth_des_rotated.114.fit")
-table2 = pf.open(file_dir+"/Aardvark_v1.0c_truth_des_rotated.115.fit")
-table3 = pf.open(file_dir+"/Aardvark_v1.0c_truth_des_rotated.86.fit")
-table4 = pf.open(file_dir+"/Aardvark_v1.0c_truth_des_rotated.147.fit")
+fits = ['Aardvark_v1.0_truth.180.fit','Aardvark_v1.0_truth.307.fit'
+       ]
+tables = []
 
-cols1 = table1[1].data	    
-cols2 = table2[1].data
-cols3 = table3[1].data
-cols4 = table4[1].data
+for fit in fits:
+	tables.append(pf.open(file_dir+fit))
 
-z = np.concatenate((cols1["Z"],cols2["Z"],cols3["Z"],cols4["Z"]))
-photoz = np.concatenate((cols1["PHOTOZ_GAUSSIAN"],cols2["PHOTOZ_GAUSSIAN"],cols3["PHOTOZ_GAUSSIAN"],cols4["PHOTOZ_GAUSSIAN"]))
-TMAGr = np.concatenate((cols1["TMAG"][:,2],cols2["TMAG"][:,2],cols3["TMAG"][:,2],cols4["TMAG"][:,2]))
-RA = np.concatenate((cols1["RA"],cols2["RA"],cols3["RA"],cols4["RA"]))
-DEC = np.concatenate((cols1["DEC"],cols2["DEC"],cols3["DEC"],cols4["DEC"]))
-GAMMA1 = np.concatenate((cols1["GAMMA1"],cols2["GAMMA1"],cols3["GAMMA1"],cols4["GAMMA1"]))
-GAMMA2 = np.concatenate((cols1["GAMMA2"],cols2["GAMMA2"],cols3["GAMMA2"],cols4["GAMMA2"]))
-K = np.concatenate((cols1["KAPPA"],cols2["KAPPA"],cols3["KAPPA"],cols4["KAPPA"]))
-e1 = np.concatenate((cols1["EPSILON"][:,0],cols2["EPSILON"][:,0],cols3["EPSILON"][:,0],cols4["EPSILON"][:,0]))
-e2 = np.concatenate((cols1["EPSILON"][:,1],cols2["EPSILON"][:,1],cols3["EPSILON"][:,1],cols4["EPSILON"][:,1]))
+cols = []
+for table in tables:
+	cols.append(table[1].data)
 
-mytools.write_fits_table('catalogue.fits', ['RA','DEC','Z','S1','S2','TMAGr','KAPPA','PHOTOZ','E1','E2'], [RA,DEC,z,GAMMA1,GAMMA2,TMAGr,K,photoz,e1,e2])
+z = []
+photoz = []
+TMAGr = []
+AMAGr = []
+OMAGr = []
+RA = []
+DEC = []
+GAMMA1 = []
+GAMMA2 = []
+K = []
+e1 = []
+e2 = []
+for col in cols:
+	z.extend(col["Z"])
+	photoz.extend(col["PHOTOZ_GAUSSIAN"])
+	TMAGr.extend(col["TMAG"][:,2])
+        AMAGr.extend(col['AMAG'][:,2])
+        OMAGr.extend(col['OMAG'][:,2])
+	RA.extend(col["RA"])
+	DEC.extend(col["DEC"])
+	GAMMA1.extend(col["GAMMA1"])
+	GAMMA2.extend(col["GAMMA2"])
+	K.extend(col["KAPPA"])
+	e1.extend(col["EPSILON"][:,0])
+	e2.extend(col["EPSILON"][:,1])
+
+
+
+z = np.asarray(z)
+photoz = np.asarray(photoz)
+TMAGr = np.asarray(TMAGr)
+AMAGr = np.asarray(AMAGr)
+OMAGr = np.asarray(OMAGr)
+RA = np.asarray(RA)
+DEC = np.asarray(DEC)
+GAMMA1 = np.asarray(GAMMA1)
+GAMMA2 = np.asarray(GAMMA2)
+K = np.asarray(K) 
+e1 = np.asarray(e1)
+e2 = np.asarray(e2)
+
+bg = [(z >.5) & (z < .6) & (TMAGr < mag_cut)] # background galaxies are where z > zcut = .5
+#print TMAGr[0:100]
+print bg
+RAbg = RA[bg]
+DECbg = DEC[bg]
+GAMMA1bg = GAMMA1[bg]
+GAMMA2bg = GAMMA2[bg]
+weightsbg = np.ones(GAMMA1[bg].shape)
+zbg = z[bg]
+
+fg = [(z < .5) & (z > .1) & (TMAGr < mag_cut)] # foreground galaxies are where z < zcut = .5
+RAfg = RA[fg]
+DECfg = DEC[fg]
+GAMMA1fg = GAMMA1[fg]
+GAMMA2fg = GAMMA2[fg]
+weightsfg = np.ones(GAMMA1[fg].shape)
+zfg = z[fg]
+#print fg
+
+fig = plt.figure()
+plt.hist(zbg,30, normed=0)
+plt.xlabel("redshift")
+plt.ylabel("Source Distribution Counts")
+plt.title("z (0.5 - 0.6)")
+fig.savefig("./figures/source_distribution.png")
+fig = plt.figure()
+plt.hist(zfg,30, normed=0)
+plt.xlabel("redshift")
+plt.ylabel("Fg Distribution Counts")
+plt.title("z (0.1 - 0.5)")
+fig.savefig("./figures/fg_distribution.png")
+        
+if os.path.exists(newOUTDIR+'foreground.fits'):
+    os.remove(newOUTDIR+'foreground.fits')
+mytools.write_fits_table(newOUTDIR+'foreground.fits', ['z','RA','DEC'], [zfg,RAfg,DECfg])
+if os.path.exists(newOUTDIR+'background.fits'):
+    os.remove(newOUTDIR+'background.fits')
+mytools.write_fits_table(newOUTDIR+'background.fits', ['RA','DEC','S1','S2','W','z'],
+                         [RAbg,DECbg,GAMMA1bg,GAMMA2bg,weightsbg,zbg])
+if os.path.exists(newOUTDIR+'catalogue.fits'):
+    os.remove(newOUTDIR+'catalogue.fits')
+mytools.write_fits_table(newOUTDIR+'catalogue.fits',
+			 ['RA','DEC','z','S1','S2','TMAGr','OMAGr','AMAGr','KAPPA','PHOTOZ','E1','E2'],
+			 [RA, DEC, z, GAMMA1, GAMMA2, TMAGr, OMAGr, AMAGr, K, photoz, e1, e2])
 
 sys.exit()
