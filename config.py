@@ -1,5 +1,5 @@
 pixel_scale = 1.0 #size of the pixel in arc min 
-ipath = '/data3/data2/home/dbrout' #input directory
+ipath = '/data3/data2/home/dbrout/bccml' #input directory
 opath = '.' #output directory
 
 pipe = 'im3shape' # this is just for naming of output file
