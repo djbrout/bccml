@@ -2,7 +2,7 @@
 from math import pi
 import numpy as np
 
-from matplotlib.pyplot import *
+#from matplotlib.pyplot import *
 
 import healpy as hp
 import pyfits as pf
@@ -19,8 +19,8 @@ outdir = 'bcc_v1.0_hpix_photoz/'
 #outdir = 'temp_output/'
 form = '%.8e'
 
-joe = '/data2/home/clampitt/bcc_v1.0/bcc_v1.0_truth_orig/'
-local '/home/dbrout/bccml/corrected_healpix/'
+joe = '/data2/home/clampitt/bcc_v1.0/'
+local = '/home/dbrout/bccml/corrected_healpix/'
 nside = 8
 
 # Read command line argument
@@ -28,14 +28,18 @@ nside = 8
 #    sys.exit('Must provide one value.')
 #tpix = int(sys.argv[1]) - 1
 
+#ind = int(os.environ['JOB_ID']) - 1    
+#print os.environ['SGE_TASK_ID']
+
 ind = int(os.environ['SGE_TASK_ID']) - 1
 #ind = 0
 #tpix = np.loadtxt('potential_pix.txt')[ind]
-tpix = np.loadtxt('des_pix.txt')[ind]
+print ind
+tpix = np.loadtxt(joe+'des_pix.txt')[ind]
 #tpix = np.loadtxt('potential_pix.txt')[0]
 
-spixfile = joe+'source_files_into_pix%d.txt' % (tpix)
-spix = np.loadtxt('source_pix_lists/' +spixfile)
+spixfile = 'source_files_into_pix%d.txt' % (tpix)
+spix = np.loadtxt(joe+'source_pix_lists/' +spixfile)
 print 'source pixels = ', spix
 
 outfile = local+'aardvark_v1.0_hpix_truth.%d.fit' % (tpix)
@@ -53,17 +57,21 @@ for j in range(len(spix)):
 
     if (spix[j] == 5000): continue
 
-    infile = joe+'Aardvark_v1.0_truth.%d.fit' % (spix[j])
+    infile = joe+indir+'Aardvark_v1.0_truth.%d.fit' % (spix[j])
     
-    hdulist = pf.open(indir +infile)
+    hdulist = pf.open(infile)
     #print hdulist[1].columns, '\n\n'
     ra = hdulist[1].data.field('ra')
     dec = hdulist[1].data.field('dec')
     z = hdulist[1].data.field('z')
 
-    abs_r = hdulist[1].data.field('AMAG')[:,1]
+    amag_r = hdulist[1].data.field('AMAG')[:,1]
     m_r = hdulist[1].data.field('TMAG')[:,1]
     m_g = hdulist[1].data.field('TMAG')[:,0]
+    gamma1 = hdulist[1].data.field('GAMMA1')
+    gamma2 = hdulist[1].data.field('GAMMA2')
+    omag_r = hdulist[1].data.field('OMAG')[:,1]
+    kappa = hdulist[1].data.field('KAPPA')
 
     # Obtain gaussian photoz with appropriate scatter for LRG
     zgauss = np.random.normal(z, 0.03*(1.+z), len(z))
@@ -96,6 +104,24 @@ for j in range(len(spix)):
         elif (key[k] == 'photoz'):
             if (j == 0): new_data[key[k]] = zgauss[pcut]
             else: new_data[key[k]] = np.hstack((new_data[key[k]], zgauss[pcut]))
+        elif (key[k] == 'tmag'):
+            if (j == 0): new_data[key[k]] = m_r[pcut]
+            else: new_data[key[k]] = np.hstack((new_data[key[k]], m_r[pcut]))
+        elif (key[k] == 'omag'):
+            if (j == 0): new_data[key[k]] = omag_r[pcut]
+            else: new_data[key[k]] = np.hstack((new_data[key[k]], omag_r[pcut]))
+        elif (key[k] == 'amag'):
+            if (j == 0): new_data[key[k]] = amag_r[pcut]
+            else: new_data[key[k]] = np.hstack((new_data[key[k]], amag_r[pcut]))
+        elif (key[k] == 'gamma1'):
+            if (j == 0): new_data[key[k]] = gamma1[pcut]
+            else: new_data[key[k]] = np.hstack((new_data[key[k]], gamma1[pcut]))
+        elif (key[k] == 'gamma2'):
+            if (j == 0): new_data[key[k]] = gamma2[pcut]
+            else: new_data[key[k]] = np.hstack((new_data[key[k]], gamma2[pcut]))
+        elif (key[k] == 'kappa'):
+            if (j == 0): new_data[key[k]] = kappa[pcut]
+            else: new_data[key[k]] = np.hstack((new_data[key[k]], kappa[pcut]))
         else:
             #print key[k]
             if (j == 0): new_data[key[k]] = hdulist[1].data.field(key[k])[pcut]
@@ -112,5 +138,5 @@ hdu = pf.PrimaryHDU()
 tbhdu = pf.new_table(tmpcols)
 thdulist = pf.HDUList([hdu, tbhdu])
 
-thdulist.writeto(outdir +outfile)
+thdulist.writeto(outfile)
 thdulist.close()
