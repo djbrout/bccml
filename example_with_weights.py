@@ -83,8 +83,8 @@ def GenKappa(bg_f, fg_f):
     return k.gamma, k.ra_b, k.dec_b, bg_f, fg_f
 
 if __name__=='__main__':
-    bg_f = 'background.fits' #background file. columsn should be RA, DEC, G1, G2, W (weight, just one for equal weight)
+    bg_f = './catalogs/background.fits' #background file. columsn should be RA, DEC, G1, G2, W (weight, just one for equal weight)
 
-    fg_f = 'foreground.fits' #foreground file. columns should be RA DEC
+    fg_f = './catalogs/foreground.fits' #foreground file. columns should be RA DEC
 
     gamma, ra_b, dec_b, bg_f, fg_f = GenKappa(bg_f, fg_f)

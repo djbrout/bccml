@@ -19,7 +19,9 @@ import config as c
 class WeightedGalKappa:
 
     def __init__(self, ra, dec, z, opath, smooth, pixel_scale,
-                 bin_ra, bin_dec, bin_z, mask,ipath,sourcefile,lensfile,
+                 bin_ra, bin_dec, bin_z, mask,ipath='./catalogs/',
+                 sourcefile='background.fits',
+                 lensfile='foreground.fits',
                  zs=0.8,pdf_zs=None, zmin_s=0.4, zmax_s=1.1,
                  zmin_l=0.1, zmax_l=1.1,rho_weight=None):
 
