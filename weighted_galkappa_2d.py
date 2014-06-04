@@ -19,7 +19,7 @@ import config as c
 class WeightedGalKappa:
 
     def __init__(self, ra, dec, z, opath, smooth, pixel_scale,
-                 bin_ra, bin_dec, bin_z, mask,ipath='./catalogs/',
+                 bin_ra, bin_dec, bin_z, mask,ipath='catalogs/',
                  sourcefile='background.fits',
                  lensfile='foreground.fits',
                  zs=0.8,pdf_zs=None, zmin_s=0.4, zmax_s=1.1,
@@ -112,7 +112,7 @@ class WeightedGalKappa:
 
         #print self.delta3d 
 
-        np.savez(c.bigfilepath+'density.npz', raedge=self.raavg, decedge=self.decavg, 
+        np.savez(opath+'density.npz', raedge=self.raavg, decedge=self.decavg, 
                  zedge=self.zavg, N3d=self.N3d, n1d=self.n1d, 
                  n3d=self.n3d, delta3d=self.delta3d)
 
