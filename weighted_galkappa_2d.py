@@ -112,7 +112,7 @@ class WeightedGalKappa:
 
         #print self.delta3d 
 
-        np.savez(opath+'density.npz', raedge=self.raavg, decedge=self.decavg, 
+        np.savez(c.opath+'density.npz', raedge=self.raavg, decedge=self.decavg, 
                  zedge=self.zavg, N3d=self.N3d, n1d=self.n1d, 
                  n3d=self.n3d, delta3d=self.delta3d)
 
