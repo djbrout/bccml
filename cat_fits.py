@@ -126,9 +126,10 @@ K = np.asarray(K)
 #e1 = np.asarray(e1)
 #e2 = np.asarray(e2)
 
+print 'step 1'
 bg = [(z >.5) & (z < .6) & (TMAGr < mag_cut)] # background galaxies are where z > zcut = .5
 #print TMAGr[0:100]
-print bg
+#print bg
 RAbg = RA[bg]
 DECbg = DEC[bg]
 GAMMA1bg = GAMMA1[bg]
@@ -136,6 +137,7 @@ GAMMA2bg = GAMMA2[bg]
 weightsbg = np.ones(GAMMA1[bg].shape)
 zbg = z[bg]
 
+print 'step 2'
 fg = [(z < .5) & (z > .1) & (TMAGr < mag_cut)] # foreground galaxies are where z < zcut = .5
 RAfg = RA[fg]
 DECfg = DEC[fg]
@@ -145,6 +147,7 @@ weightsfg = np.ones(GAMMA1[fg].shape)
 zfg = z[fg]
 #print fg
 
+print 'plotting'
 fig = plt.figure()
 plt.hist(zbg,30, normed=0)
 plt.xlabel("redshift")
@@ -157,10 +160,11 @@ plt.xlabel("redshift")
 plt.ylabel("Fg Distribution Counts")
 plt.title("z (0.1 - 0.5)")
 fig.savefig("./figures/fg_distribution.png")
-        
+
+print 'saving'
 if os.path.exists(newOUTDIR+'foreground.fits'):
     os.remove(newOUTDIR+'foreground.fits')
-mytools.write_fits_table(newOUTDIR+'foreground.fits', ['z','RA','DEC'], [zfg,RAfg,DECfg])
+mytools.write_fits_table(newOUTDIR+'foreground.fits', ['z','RA','DEC','tmagr','omagr','amagr'], [zfg,RAfg,DECfg,TMAGr, OMAGr, AMAGr])
 if os.path.exists(newOUTDIR+'background.fits'):
     os.remove(newOUTDIR+'background.fits')
 mytools.write_fits_table(newOUTDIR+'background.fits', ['RA','DEC','S1','S2','W','z'],

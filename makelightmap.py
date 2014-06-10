@@ -5,6 +5,7 @@ import os
 import pyfits as pf
 import numpy as np
 import math
+import pylab as p
 
 class lightmap:
     def __init__(self, ipath='',
@@ -82,8 +83,31 @@ class lightmap:
         self.lum2d = 10**((4.83-absmag)/2.5)
         print 'lum '
         print self.lum2d
+        self.lum2d[(self.lum2d > 10**17)] = 1000.0
+        
         self.save_fits_image(self.lum2d,'./maps/luminosity/lum_density.fits')
-               
+
+
+        #print 'plotting 1'
+        
+        #plt.figure()
+        #n, bins, patches = plt.hist(self.tmag2d,100, normed=1, histtype='bar')
+        #plt.savefig('./maps/luminosity/absmag_hist.png')
+
+        #print 'plotting 2'
+        
+        #plt.figure()
+        #n, bins, patches = plt.hist(absmag,100, normed=1, histtype='bar')
+        #plt.savefig('./maps/luminosity/absmag_hist.png')
+
+        print 'plotting 3'
+                
+        plt.figure()
+        n, bins, patches = plt.hist(self.lum2d[(self.lum2d < .4*10**10) & (self.lum2d > 1001.0)],100,log=True, histtype='bar')
+        plt.xlabel('Solar Luminosity')
+        plt.ylabel('# of Pixels')
+        print 'saving'
+        plt.savefig('./maps/luminosity/lum_hist.png')
         #self.plot_2dmap(self.lum2d,'Luminosity Map','./maps/luminosity/lum_2d.pdf')
         #self.save_fits_image(self.lum2d,'./maps/luminosity/lum_density.fits')
         return
