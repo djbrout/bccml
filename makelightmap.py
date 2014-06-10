@@ -32,7 +32,8 @@ class lightmap:
         self.ra_l = self.cols['ra']
         self.dec_l = self.cols['dec']
         self.z_l = self.cols['z']
-        self.mag_map()
+        #self.mag_map()
+        print 'step 1'
         self.lum_from_appmag()
 
     def mag_map(self):
@@ -70,21 +71,36 @@ class lightmap:
     def lum_from_appmag(self):
         c = 3*10**5 #parsec/sec
         H_0 = 72.0
-        zi = np.arange(0.01,self.z_lens,.01)
-        Dc = c/H_0 * self.integrate(zi,self.E(zi))
-        parsec = Dc*1000000
-        #parsec = 780000
-        print 'parsec '+str(parsec)
-        print 'tmag'
-        print self.tmag2d
-        absmag = 5.0 + self.tmag2d - 5.0*math.log(parsec,10)
-        print 'absmag '
-        print absmag
-        self.lum2d = 10**((4.83-absmag)/2.5)
-        print 'lum '
-        print self.lum2d
-        self.lum2d[(self.lum2d > 10**17)] = 1000.0
         
+        indx = -1
+        self.lum_l = []
+
+        
+
+        f = open('./catalogs/lum_fg_catalog.txt','w')
+        f.write('redshift\t tmag\t parsec\t absmag\t luminosity\n')
+        try:
+            for zz in self.z_l:
+                indx += 1
+                zi = np.arange(0.01,zz,.01)
+                Dc = c/H_0 * self.integrate(zi,self.E(zi))
+                parsec = Dc*1000000
+                absmag = 5.0 + self.tmag_l[indx] - 5.0*math.log(parsec,10)
+                f.write(str(zz)+'\t'+str(self.tmag_l[indx])+'\t'+str(parsec)+'\t'+str(absmag)+'\t'+str(10**((4.83-absmag)/2.5))+'\n')
+                self.lum_l.append(10**((4.83-absmag)/2.5))
+                #self.lum2d[(self.lum2d > 10**17)] = 1000.0
+        except ValueError,e:
+            f.close()
+            print e
+            sys.exit()
+        f.close()
+        self.lum_l = np.asarray(self.lum_l)
+        #self.lum_l = self.lum_l - np.mean(self.lum_l)
+        print 'pixelizing'
+        self.lum2d, edges = np.histogramdd(np.array([self.dec_l,self.ra_l]).T,
+                                            bins=(self.bin_dec, self.bin_ra),
+                                            weights=self.lum_l)
+        print 'saving'
         self.save_fits_image(self.lum2d,'./maps/luminosity/lum_density.fits')
 
 
