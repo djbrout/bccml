@@ -68,12 +68,22 @@ def GenKappa(bg_f, fg_f):
                  randomize=c.randomize, constrain=c.constrain, 
                  coord=c.coord, bin_ra=k.ra_b, bin_dec=k.dec_b,
                  project=c.project, reference_ra=c.reference_ra)
-
+    
     ofile, mask = n.pixelize_galcount(n.ra, n.dec, 
                   smooth_size=smooth_size,
                   savethis=True, file_root=file_root, fg='fg')
 
+    f = open('./maps/kappa/kappa_ra_bins.txt','w')
+    for rab in n.ra_b:
+        f.write(str(rab)+'\n')
+    f.close()
+    f = open('./maps/kappa/kappa_dec_bins.txt','w')
+    for decb in n.dec_b:
+        f.write(str(decb)+'\n')
+    f.close()
+
     wn = WeightedGalKappa(n.ra, n.dec, n.z, '.', c.smooth_size, pixel_scale, n.ra_b, n.dec_b, 5, mask.T, zs=.8)
+
     #wn = WeightedGalKappa(n.ra, n.dec, n.z, '.', c.smooth_size, pixel_scale, n.ra_b, n.dec_b, 5, mask.T, zs=[.5,.6,.7,.8,.9,1.,1.1,1.2])
 
     wn.delta_rho_3d()
